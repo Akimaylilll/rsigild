@@ -1,0 +1,93 @@
+.process-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.empty-list {
+  padding: 24px;
+  text-align: center;
+  color: #666;
+}
+
+.process-item {
+  padding: 12px;
+  margin-bottom: 8px;
+  background: #1a1a2e;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.process-item:hover {
+  border-color: #0f3460;
+}
+
+.process-item.selected {
+  border-color: #e94560;
+}
+
+.process-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.process-name {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.status-badge.running {
+  background: #388e3c;
+  color: white;
+}
+
+.status-badge.stopped {
+  background: #666;
+  color: white;
+}
+
+.process-command {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.process-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.health-ok {
+  color: #4caf50;
+}
+
+.health-fail {
+  color: #f44336;
+}
+
+.process-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-small {
+  padding: 4px 8px;
+  font-size: 12px;
+}

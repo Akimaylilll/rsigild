@@ -1,0 +1,115 @@
+.process-detail {
+  max-width: 900px;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.detail-header h2 {
+  color: #e94560;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.detail-card {
+  background: #16213e;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.detail-card h3 {
+  margin-bottom: 16px;
+  color: #e94560;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-row .label {
+  color: #888;
+  font-size: 13px;
+}
+
+.detail-row .value {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.detail-row .value.code {
+  font-family: monospace;
+  background: #1a1a2e;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.status-ok {
+  color: #4caf50;
+}
+
+.status-off {
+  color: #888;
+}
+
+.status-fail {
+  color: #f44336;
+}
+
+.logs-section {
+  background: #16213e;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.logs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.logs-header h3 {
+  color: #e94560;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.logs-content {
+  background: #1a1a2e;
+  padding: 12px;
+  border-radius: 4px;
+  max-height: 400px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: #ccc;
+}
