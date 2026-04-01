@@ -79,6 +79,7 @@ function colorizeLogLevel(text: string): string {
 function ProcessDetail({ process, status, onStart, onStop, onEdit }: Props) {
   const [logs, setLogs] = useState("");
   const [loadingLogs, setLoadingLogs] = useState(false);
+  const [activeTab, setActiveTab] = useState<"details" | "logs">("details");
 
   const loadLogs = async () => {
     setLoadingLogs(true);
@@ -127,96 +128,124 @@ function ProcessDetail({ process, status, onStart, onStop, onEdit }: Props) {
         </div>
       </div>
 
-      <div className="detail-grid">
-        <div className="detail-card">
-          <h3>Status</h3>
-          <div className="detail-content">
-            <div className="detail-row">
-              <span className="label">Running:</span>
-              <span className={`value ${status.running ? "status-ok" : "status-off"}`}>
-                {status.running ? "Yes" : "No"}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="label">PID:</span>
-              <span className="value">{status.pid || "N/A"}</span>
-            </div>
-            <div className="detail-row">
-              <span className="label">Health Check:</span>
-              <span
-                className={`value ${
-                  status.health_check_ok === null
-                    ? ""
-                    : status.health_check_ok
-                    ? "status-ok"
-                    : "status-fail"
-                }`}
-              >
-                {status.health_check_ok === null
-                  ? "N/A"
-                  : status.health_check_ok
-                  ? "OK"
-                  : "FAIL"}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span className="label">Last Health Check:</span>
-              <span className="value">{formatDate(status.last_health_check)}</span>
-            </div>
-            <div className="detail-row">
-              <span className="label">Restart Count:</span>
-              <span className="value">{status.restart_count}</span>
-            </div>
-            <div className="detail-row">
-              <span className="label">Last Restart:</span>
-              <span className="value">{formatDate(status.last_restart)}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="detail-card">
-          <h3>Configuration</h3>
-          <div className="detail-content">
-            <div className="detail-row">
-              <span className="label">Command:</span>
-              <span className="value code">{process.command}</span>
-            </div>
-            <div className="detail-row">
-              <span className="label">Arguments:</span>
-              <span className="value code">{process.args.join(" ") || "None"}</span>
-            </div>
-            <div className="detail-row">
-              <span className="label">Working Dir:</span>
-              <span className="value">{process.working_dir || "Default"}</span>
-            </div>
-            <div className="detail-row">
-              <span className="label">Health URL:</span>
-              <span className="value">{process.health_check_url || "None"}</span>
-            </div>
-            <div className="detail-row">
-              <span className="label">Check Interval:</span>
-              <span className="value">{process.health_check_interval_secs}s</span>
-            </div>
-            <div className="detail-row">
-              <span className="label">Auto Restart:</span>
-              <span className="value">{process.auto_restart ? "Yes" : "No"}</span>
-            </div>
-            <div className="detail-row">
-              <span className="label">Enabled:</span>
-              <span className="value">{process.enabled ? "Yes" : "No"}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="logs-section">
-        <div className="logs-header">
-          <h3>Logs</h3>
-          <button className="btn btn-secondary btn-small" onClick={loadLogs} disabled={loadingLogs}>
-            {loadingLogs ? "Loading..." : "Refresh Logs"}
+      <div className="tabs-container">
+        <div className="tabs-header">
+          <button 
+            className={`tab-btn ${activeTab === "details" ? "active" : ""}`}
+            onClick={() => setActiveTab("details")}
+          >
+            Details
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === "logs" ? "active" : ""}`}
+            onClick={() => setActiveTab("logs")}
+          >
+            Logs
           </button>
         </div>
-        <pre className="logs-content" dangerouslySetInnerHTML={{ __html: colorizeLogLevel(ansiToHtml(logs)) || "No logs available" }} />
+
+        <div className="tab-content">
+          {activeTab === "logs" && (
+            <div className="logs-section">
+              <div className="logs-header">
+                <button className="btn btn-secondary btn-small" onClick={loadLogs} disabled={loadingLogs}>
+                  {loadingLogs ? "Loading..." : "Refresh"}
+                </button>
+              </div>
+              <pre className="logs-content" dangerouslySetInnerHTML={{ __html: colorizeLogLevel(ansiToHtml(logs)) || "No logs available" }} />
+            </div>
+          )}
+
+          {activeTab === "details" && (
+            <div className="details-section">
+              <div className="detail-grid">
+                <div className="detail-card">
+                  <h3>Status</h3>
+                  <div className="detail-content">
+                    <div className="detail-row">
+                      <span className="label">Running:</span>
+                      <span className={`value ${status.running ? "status-ok" : "status-off"}`}>
+                        {status.running ? "Yes" : "No"}
+                      </span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="label">PID:</span>
+                      <span className="value">{status.pid || "N/A"}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="label">Health Check:</span>
+                      <span
+                        className={`value ${
+                          status.health_check_ok === null
+                            ? ""
+                            : status.health_check_ok
+                            ? "status-ok"
+                            : "status-fail"
+                        }`}
+                      >
+                        {status.health_check_ok === null
+                          ? "N/A"
+                          : status.health_check_ok
+                          ? "OK"
+                          : "FAIL"}
+                      </span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="label">Last Health Check:</span>
+                      <span className="value">{formatDate(status.last_health_check)}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="label">Restart Count:</span>
+                      <span className="value">{status.restart_count}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="label">Last Restart:</span>
+                      <span className="value">{formatDate(status.last_restart)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="detail-card">
+                  <h3>Configuration</h3>
+                  <div className="detail-content">
+                    <div className="detail-row">
+                      <span className="label">Command:</span>
+                      <span className="value code">{process.command}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="label">Arguments:</span>
+                      <span className="value code">{process.args.join(" ") || "None"}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="label">Working Dir:</span>
+                      <span className="value">{process.working_dir || "Default"}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="label">Health URL:</span>
+                      <span className="value">{process.health_check_url || "None"}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="label">Check Interval:</span>
+                      <span className="value">{process.health_check_interval_secs}s</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="label">Auto Restart:</span>
+                      <span className="value">{process.auto_restart ? "Yes" : "No"}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="label">Enabled:</span>
+                      <span className="value">{process.enabled ? "Yes" : "No"}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="label">Log Path:</span>
+                      <span className="value code">{process.log_path || "Default"}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
