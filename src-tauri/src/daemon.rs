@@ -294,14 +294,100 @@ impl DaemonManager {
             std::fs::create_dir_all(parent)?;
         }
         
-        let log_file = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&log_path)?;
-        let log_file_clone = log_file.try_clone()?;
+        // Don't redirect stdout/stderr to file directly
+        // We'll handle it in background threads with encoding conversion
+        cmd.stdout(Stdio::piped())
+           .stderr(Stdio::piped());
+
+        let mut child = cmd.spawn()
+            .map_err(|e| anyhow::anyhow!("Failed to start process {}: {}", config.name, e))?;
         
-        cmd.stdout(Stdio::from(log_file))
-            .stderr(Stdio::from(log_file_clone));
+        let pid = child.id();
+        log::info!("Started process {} with PID {}", config.name, pid);
+        
+        // Take stdout and stderr for background processing
+        let stdout = child.stdout.take();
+        let stderr = child.stderr.take();
+        
+        // Spawn thread to handle stdout
+        if let Some(stdout) = stdout {
+            let log_path = log_path.clone();
+            std::thread::spawn(move || {
+                use std::io::{Read, Write};
+                let mut reader = stdout;
+                let mut file = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(&log_path)
+                    .ok();
+                
+                let mut buffer = [0u8; 4096];
+                let mut leftover = Vec::new();
+                
+                loop {
+                    match reader.read(&mut buffer) {
+                        Ok(0) => break, // EOF
+                        Ok(n) => {
+                            let mut data = leftover.clone();
+                            data.extend_from_slice(&buffer[..n]);
+                            
+                            // Try to decode as UTF-8, fallback to GBK
+                            let text = String::from_utf8(data.clone())
+                                .unwrap_or_else(|_| {
+                                    let (cow, _, _) = encoding_rs::GBK.decode(&data);
+                                    cow.into_owned()
+                                });
+                            
+                            if let Some(ref mut f) = file {
+                                let _ = write!(f, "{}", text);
+                                let _ = f.flush();
+                            }
+                            
+                            leftover.clear();
+                        }
+                        Err(_) => break,
+                    }
+                }
+            });
+        }
+        
+        // Spawn thread to handle stderr
+        if let Some(stderr) = stderr {
+            let log_path = log_path.clone();
+            std::thread::spawn(move || {
+                use std::io::{Read, Write};
+                let mut reader = stderr;
+                let mut file = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(&log_path)
+                    .ok();
+                
+                let mut buffer = [0u8; 4096];
+                
+                loop {
+                    match reader.read(&mut buffer) {
+                        Ok(0) => break, // EOF
+                        Ok(n) => {
+                            let data = &buffer[..n];
+                            
+                            // Try to decode as UTF-8, fallback to GBK
+                            let text = String::from_utf8(data.to_vec())
+                                .unwrap_or_else(|_| {
+                                    let (cow, _, _) = encoding_rs::GBK.decode(data);
+                                    cow.into_owned()
+                                });
+                            
+                            if let Some(ref mut f) = file {
+                                let _ = write!(f, "{}", text);
+                                let _ = f.flush();
+                            }
+                        }
+                        Err(_) => break,
+                    }
+                }
+            });
+        }
 
         let child = cmd.spawn()
             .map_err(|e| anyhow::anyhow!("Failed to start process {}: {}", config.name, e))?;
@@ -654,13 +740,8 @@ impl DaemonManager {
         
         let bytes = std::fs::read(&log_path)?;
         
-        // Try UTF-8 first, then GBK
-        let content = String::from_utf8(bytes.clone())
-            .unwrap_or_else(|_| {
-                // Convert from GBK to UTF-8
-                let (cow, _, _) = encoding_rs::GBK.decode(&bytes);
-                cow.into_owned()
-            });
+        // Simply read as UTF-8
+        let content = String::from_utf8_lossy(&bytes).into_owned();
         
         let log_lines: Vec<&str> = content.lines().collect();
         let start = if log_lines.len() > lines {
