@@ -56,6 +56,26 @@ function ansiToHtml(text: string): string {
   return result;
 }
 
+function colorizeLogLevel(text: string): string {
+  let result = text;
+
+  // Color log levels with dash format
+  result = result.replace(/( - )(INFO)( - )/g, '$1<span style="color:#27ae60;font-weight:bold">$2</span>$3');
+  result = result.replace(/( - )(DEBUG)( - )/g, '$1<span style="color:#3498db;font-weight:bold">$2</span>$3');
+  result = result.replace(/( - )(WARNING)( - )/g, '$1<span style="color:#f39c12;font-weight:bold">$2</span>$3');
+  result = result.replace(/( - )(ERROR)( - )/g, '$1<span style="color:#e74c3c;font-weight:bold">$2</span>$3');
+  result = result.replace(/( - )(TRACE)( - )/g, '$1<span style="color:#9b59b6;font-weight:bold">$2</span>$3');
+
+  // Color standalone log levels: "INFO:" or "INFO "
+  result = result.replace(/^(INFO)([:\s])/gm, '<span style="color:#27ae60;font-weight:bold">$1</span>$2');
+  result = result.replace(/^(DEBUG)([:\s])/gm, '<span style="color:#3498db;font-weight:bold">$1</span>$2');
+  result = result.replace(/^(WARNING)([:\s])/gm, '<span style="color:#f39c12;font-weight:bold">$1</span>$2');
+  result = result.replace(/^(ERROR)([:\s])/gm, '<span style="color:#e74c3c;font-weight:bold">$1</span>$2');
+  result = result.replace(/^(TRACE)([:\s])/gm, '<span style="color:#9b59b6;font-weight:bold">$1</span>$2');
+
+  return result;
+}
+
 function ProcessDetail({ process, status, onStart, onStop, onEdit }: Props) {
   const [logs, setLogs] = useState("");
   const [loadingLogs, setLoadingLogs] = useState(false);
@@ -196,7 +216,7 @@ function ProcessDetail({ process, status, onStart, onStop, onEdit }: Props) {
             {loadingLogs ? "Loading..." : "Refresh Logs"}
           </button>
         </div>
-        <pre className="logs-content" dangerouslySetInnerHTML={{ __html: ansiToHtml(logs) || "No logs available" }} />
+        <pre className="logs-content" dangerouslySetInnerHTML={{ __html: colorizeLogLevel(ansiToHtml(logs)) || "No logs available" }} />
       </div>
     </div>
   );
