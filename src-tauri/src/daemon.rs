@@ -734,17 +734,22 @@ impl DaemonManager {
             std::path::PathBuf::from(&process_config.log_path)
         };
         
+        log::info!("Looking for log file at: {:?}", log_path);
+        
         if !log_path.exists() {
+            log::warn!("Log file does not exist: {:?}", log_path);
             return Ok(String::new());
         }
         
         let bytes = std::fs::read(&log_path)?;
+        log::info!("Read {} bytes from log file", bytes.len());
         
         // Simply read as UTF-8
         let content = String::from_utf8_lossy(&bytes).into_owned();
+        log::info!("Log content length: {} chars", content.len());
         
         let log_lines: Vec<&str> = content.lines().collect();
-        let start = if log_lines.len() > lines {
+        let start = if lines > 0 && log_lines.len() > lines {
             log_lines.len() - lines
         } else {
             0
