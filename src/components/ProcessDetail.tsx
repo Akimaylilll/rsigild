@@ -110,9 +110,19 @@ function highlightSearch(text: string, searchTerm: string, currentMatch: number 
       let allMatch = true;
       for (const term of searchTerms) {
         const searchTermForCheck = caseSensitive ? term : term.toLowerCase();
-        if (!lineForSearch.includes(searchTermForCheck)) {
-          allMatch = false;
-          break;
+        if (wholeWord) {
+          // Use word boundary matching
+          const escapedTerm = searchTermForCheck.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const wordRegex = new RegExp(`\\b${escapedTerm}\\b`, caseSensitive ? '' : 'i');
+          if (!wordRegex.test(lineForSearch)) {
+            allMatch = false;
+            break;
+          }
+        } else {
+          if (!lineForSearch.includes(searchTermForCheck)) {
+            allMatch = false;
+            break;
+          }
         }
       }
       
@@ -120,7 +130,7 @@ function highlightSearch(text: string, searchTerm: string, currentMatch: number 
         matchCount++;
         const isCurrent = matchCount - 1 === currentMatchIndex;
         
-        const highlightedLine = line.replace(/>([^<]+)</g, (match, content) => {
+        const highlightedLine = line.replace(/>([^<]+)</g, (_match, content) => {
           const highlighted = content.replace(regex, (m: string) => {
             if (isCurrent) {
               return `<span class="current-match" style="background:#e94560;color:#fff;font-weight:bold">${m}</span>`;
@@ -140,7 +150,7 @@ function highlightSearch(text: string, searchTerm: string, currentMatch: number 
     let matchCount = 0;
     const currentMatchIndex = currentMatch > 0 ? currentMatch - 1 : -1;
     
-    return text.replace(/>([^<]+)</g, (match, content) => {
+    return text.replace(/>([^<]+)</g, (_match, content) => {
       return '>' + content.replace(regex, (m: string) => {
         matchCount++;
         const isCurrent = matchCount - 1 === currentMatchIndex;
@@ -173,6 +183,12 @@ function ProcessDetail({ process, status, onStart, onStop, onEdit }: Props) {
     try {
       const result = await invoke<string>("get_logs", { id: process.id, lines: 0 });
       setLogs(result);
+      // Reset to first line and first match
+      lastMatchPosition.current = 0;
+      lastMatchLine.current = 0;
+      if (logsRef.current) {
+        logsRef.current.scrollTop = 0;
+      }
     } catch (error) {
       console.error("Failed to load logs:", error);
       setLogs("Failed to load logs");
@@ -211,9 +227,18 @@ function ProcessDetail({ process, status, onStart, onStop, onEdit }: Props) {
         let allMatch = true;
         for (const term of searchTerms) {
           const searchTermForCheck = caseSensitive ? term : term.toLowerCase();
-          if (!lineForSearch.includes(searchTermForCheck)) {
-            allMatch = false;
-            break;
+          if (wholeWord) {
+            const escapedTerm = searchTermForCheck.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const wordRegex = new RegExp(`\\b${escapedTerm}\\b`, caseSensitive ? '' : 'i');
+            if (!wordRegex.test(lineForSearch)) {
+              allMatch = false;
+              break;
+            }
+          } else {
+            if (!lineForSearch.includes(searchTermForCheck)) {
+              allMatch = false;
+              break;
+            }
           }
         }
         
@@ -421,9 +446,18 @@ function ProcessDetail({ process, status, onStart, onStop, onEdit }: Props) {
                             let allMatch = true;
                             for (const term of searchTerms) {
                               const searchTermForCheck = caseSensitive ? term : term.toLowerCase();
-                              if (!lineForSearch.includes(searchTermForCheck)) {
-                                allMatch = false;
-                                break;
+                              if (wholeWord) {
+                                const escapedTerm = searchTermForCheck.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                const wordRegex = new RegExp(`\\b${escapedTerm}\\b`, caseSensitive ? '' : 'i');
+                                if (!wordRegex.test(lineForSearch)) {
+                                  allMatch = false;
+                                  break;
+                                }
+                              } else {
+                                if (!lineForSearch.includes(searchTermForCheck)) {
+                                  allMatch = false;
+                                  break;
+                                }
                               }
                             }
                             
@@ -516,9 +550,18 @@ function ProcessDetail({ process, status, onStart, onStop, onEdit }: Props) {
                             let allMatch = true;
                             for (const term of searchTerms) {
                               const searchTermForCheck = caseSensitive ? term : term.toLowerCase();
-                              if (!lineForSearch.includes(searchTermForCheck)) {
-                                allMatch = false;
-                                break;
+                              if (wholeWord) {
+                                const escapedTerm = searchTermForCheck.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                const wordRegex = new RegExp(`\\b${escapedTerm}\\b`, caseSensitive ? '' : 'i');
+                                if (!wordRegex.test(lineForSearch)) {
+                                  allMatch = false;
+                                  break;
+                                }
+                              } else {
+                                if (!lineForSearch.includes(searchTermForCheck)) {
+                                  allMatch = false;
+                                  break;
+                                }
                               }
                             }
                             

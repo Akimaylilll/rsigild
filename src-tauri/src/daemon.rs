@@ -749,13 +749,17 @@ impl DaemonManager {
         log::info!("Log content length: {} chars", content.len());
         
         let log_lines: Vec<&str> = content.lines().collect();
-        let start = if lines > 0 && log_lines.len() > lines {
-            log_lines.len() - lines
+        
+        // Reverse lines so newest entries appear first
+        let mut reversed_lines: Vec<&str> = log_lines.into_iter().rev().collect();
+        
+        let end = if lines > 0 && reversed_lines.len() > lines {
+            lines
         } else {
-            0
+            reversed_lines.len()
         };
         
-        Ok(log_lines[start..].join("\n"))
+        Ok(reversed_lines[..end].join("\n"))
     }
 }
 
