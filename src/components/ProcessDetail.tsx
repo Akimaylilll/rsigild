@@ -170,6 +170,8 @@ function ProcessDetail({ process, status, onStart, onStop, onEdit }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentMatch, setCurrentMatch] = useState(0);
   const [totalMatches, setTotalMatches] = useState(0);
+  const [isStopping, setIsStopping] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const logsRef = useRef<HTMLPreElement>(null);
   const [shouldScroll, setShouldScroll] = useState(false);
   const lastMatchPosition = useRef<number>(0);
@@ -358,13 +360,36 @@ function ProcessDetail({ process, status, onStart, onStop, onEdit }: Props) {
       <div className="detail-header">
         <h2>{process.name}</h2>
         <div className="detail-actions">
-          {status.running ? (
-            <button className="btn btn-warning" onClick={() => onStop(process.id)}>
-              Stop
-            </button>
-          ) : (
-            <button className="btn btn-success" onClick={() => onStart(process.id)}>
+          {!status.running && !isStarting ? (
+            <button className="btn btn-success" disabled={isStarting} onClick={() => {
+              setIsStarting(true);
+              onStart(process.id);
+              setTimeout(() => {
+                setIsStarting(false);
+              }, 5000);
+            }}>
               Start
+            </button>
+          ) : status.running && !isStarting ? (
+            <button className="btn btn-warning" disabled={isStopping} onClick={async () => {
+              setIsStopping(true);
+              await onStop(process.id);
+              setIsStopping(false);
+            }}>
+              {isStopping ? (
+                <span className="btn-loading">
+                  <span className="spinner"></span>
+                  Stopping...
+                </span>
+              ) : "Stop"}
+            </button>
+          ) : null}
+          {isStarting && (
+            <button className="btn btn-success" disabled={true}>
+              <span className="btn-loading">
+                <span className="spinner"></span>
+                Starting...
+              </span>
             </button>
           )}
           <button 

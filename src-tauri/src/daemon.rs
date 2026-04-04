@@ -400,10 +400,23 @@ impl DaemonManager {
                 graceful_stop_process(*pid);
             }
             for pid in &pids {
-                for _ in 0..50 {
+                // Wait up to 20 seconds for graceful exit
+                let mut exited = false;
+                for _ in 0..200 {
                     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-                    if !is_process_running(*pid) { log::info!("Process {} exited gracefully", pid); break; }
+                    if !is_process_running(*pid) {
+                        log::info!("Process {} exited gracefully", pid);
+                        exited = true;
+                        break;
+                    }
                 }
+                
+                // Wait additional 10 seconds for log flushing after exit
+                if exited {
+                    log::info!("Waiting 10s for log flushing...");
+                    tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+                }
+                
                 if is_process_running(*pid) {
                     log::warn!("Process {} did not exit, force killing", pid);
                     force_stop_process(*pid);
@@ -430,10 +443,23 @@ impl DaemonManager {
                 #[cfg(target_os = "windows")]
                 {
                     graceful_stop_process(pid);
-                    for _ in 0..50 {
+                    // Wait up to 20 seconds for graceful exit
+                    let mut exited = false;
+                    for _ in 0..200 {
                         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-                        if !is_process_running(pid) { log::info!("Process {} exited gracefully", pid); break; }
+                        if !is_process_running(pid) {
+                            log::info!("Process {} exited gracefully", pid);
+                            exited = true;
+                            break;
+                        }
                     }
+                    
+                    // Wait additional 10 seconds for log flushing after exit
+                    if exited {
+                        log::info!("Waiting 10s for log flushing...");
+                        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+                    }
+                    
                     if is_process_running(pid) {
                         log::warn!("Process {} did not exit, force killing", pid);
                         force_stop_process(pid);
