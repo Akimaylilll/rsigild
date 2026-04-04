@@ -180,16 +180,17 @@ function ProcessDetail({ process, status, onStart, onStop, onEdit }: Props) {
   const [caseSensitive, setCaseSensitive] = useState(false);
   const [wholeWord, setWholeWord] = useState(false);
 
-  const loadLogs = async () => {
+  const loadLogs = async (forceScrollToTop: boolean = false) => {
     setLoadingLogs(true);
     try {
       const result = await invoke<string>("get_logs", { id: process.id, lines: 0 });
       setLogs(result);
-      // Reset to first line and first match
-      lastMatchPosition.current = 0;
-      lastMatchLine.current = 0;
-      if (logsRef.current) {
-        logsRef.current.scrollTop = 0;
+      if (forceScrollToTop) {
+        lastMatchPosition.current = 0;
+        lastMatchLine.current = 0;
+        if (logsRef.current) {
+          logsRef.current.scrollTop = 0;
+        }
       }
     } catch (error) {
       console.error("Failed to load logs:", error);
@@ -199,10 +200,11 @@ function ProcessDetail({ process, status, onStart, onStop, onEdit }: Props) {
   };
 
   useEffect(() => {
-    loadLogs();
-    const interval = setInterval(loadLogs, 10000);
+    // If search is empty, scroll to top on load
+    loadLogs(!searchTerm);
+    const interval = setInterval(() => loadLogs(!searchTerm), 10000);
     return () => clearInterval(interval);
-  }, [process.id]);
+  }, [process.id, searchTerm]);
 
   useEffect(() => {
     if (!searchTerm) {
@@ -210,6 +212,9 @@ function ProcessDetail({ process, status, onStart, onStop, onEdit }: Props) {
       setCurrentMatch(0);
       lastMatchPosition.current = 0;
       lastMatchLine.current = 0;
+      if (logsRef.current) {
+        logsRef.current.scrollTop = 0;
+      }
       return;
     }
     
@@ -660,7 +665,7 @@ function ProcessDetail({ process, status, onStart, onStop, onEdit }: Props) {
                       ▼
                     </button>
                   </div>
-                  <button className="refresh-btn" onClick={loadLogs} disabled={loadingLogs} title="Refresh">
+                  <button className="refresh-btn" onClick={() => loadLogs(true)} disabled={loadingLogs} title="Refresh">
                     ↻
                   </button>
                 </div>
